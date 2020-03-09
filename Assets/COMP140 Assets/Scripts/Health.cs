@@ -13,7 +13,7 @@ public class Health : MonoBehaviour
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        if (currentHealth<0)
+        if (currentHealth<=0)
         {
             dead = true;
             Destroy(gameObject, 0.5f);

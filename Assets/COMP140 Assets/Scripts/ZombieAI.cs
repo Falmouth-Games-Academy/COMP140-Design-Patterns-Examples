@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityStandardAssets.Characters.ThirdPerson;
 
 [RequireComponent(typeof(WaypointController))]
@@ -18,19 +19,22 @@ public class ZombieAI : MonoBehaviour
         Chase,
         Attack,
         Dead
-
     }
 
     //This is the current AI State
     [SerializeField]
     AIState currentAIState=AIState.Patrol;
 
+    //All the components required to use the zombie AI
     WaypointController waypointController;
     Animator zombieAnimator;
     EnemySensor sensor;
     AICharacterControl characterControl;
     AttackRangeChecker attackRangeChecker;
     ThirdPersonCharacter thirdPersonCharacter;
+
+    [SerializeField]
+    Text debugText;
 
     void Start()
     {
@@ -43,13 +47,16 @@ public class ZombieAI : MonoBehaviour
 
         attackRangeChecker.enabled = false;
 
+        //Add in animation events
         AnimationClip[] animationClips=zombieAnimator.runtimeAnimatorController.animationClips;
         foreach(AnimationClip clip in animationClips)
         {
+            //We want to add a function to be called when the zombie attack is a place
             if (clip.name=="Zombie Attack")
             {
                 AnimationEvent animationEvent = new AnimationEvent();
                 animationEvent.functionName = "AttackAnimationComplete";
+                //Animation time for a place where this could hit
                 animationEvent.time = 1.13f;
                 clip.AddEvent(animationEvent);
             }
@@ -96,6 +103,7 @@ public class ZombieAI : MonoBehaviour
 
     void OnPatrol()
     {
+        debugText.text = "Patrol";
         //Check to see if we have sensed a target, and move into chase
         if (sensor.HasDetectedEnemy())
         {
@@ -112,24 +120,23 @@ public class ZombieAI : MonoBehaviour
 
     void OnAttack()
     {
+        debugText.text = "Attack";
         //Attack
         zombieAnimator.SetBool("Attack", true);
 
         if (!attackRangeChecker.InRangeToAttack())
         {
             zombieAnimator.SetBool("Attack", false);
-            currentAIState = AIState.Chase;
+            currentAIState = AIState.Patrol;
             thirdPersonCharacter.enabled = true;
+            waypointController.enabled = true;
+            characterControl.SetTarget(waypointController.GetCurrentWaypoint());
         }
-
-        //give some damage to our target and chjeck if its dead
-        //If it is dead then go back to patrol
-
-
     }
 
     void OnChase()
     {
+        debugText.text = "Chase";
         characterControl.SetTarget(sensor.TargetedEnemy());
         //Are we close enough to attack?
         if (attackRangeChecker.InRangeToAttack())
@@ -141,6 +148,7 @@ public class ZombieAI : MonoBehaviour
     void OnDead()
     {
         //Have we lost our health
+        debugText.text = "Dead";
     }
 
     public void DeathAnimationComplete()
@@ -159,7 +167,7 @@ public class ZombieAI : MonoBehaviour
             {
                 currentAIState = AIState.Patrol;
                 waypointController.enabled = true;
-                sensor.enabled = true;
+                characterControl.SetTarget(waypointController.GetCurrentWaypoint());
             }
         }
         else
@@ -167,6 +175,7 @@ public class ZombieAI : MonoBehaviour
             currentAIState = AIState.Patrol;
             waypointController.enabled = true;
             sensor.enabled = true;
+            characterControl.SetTarget(waypointController.GetCurrentWaypoint());
         }
     }
 }

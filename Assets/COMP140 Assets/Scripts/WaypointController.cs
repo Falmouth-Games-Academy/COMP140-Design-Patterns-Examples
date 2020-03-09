@@ -29,6 +29,7 @@ public class WaypointController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        waypoints.Clear();
         //Grab the AI Controller
         AIController = GetComponent<AICharacterControl>();
         //Cycle through all children to grab the waypoints
@@ -39,7 +40,7 @@ public class WaypointController : MonoBehaviour
             waypoints.Add(waypoint);
         }
         //Asign the first waypoint
-        currentWaypoint = waypoints[0];
+        currentWaypoint = waypoints[currentWaypointIndex];
         //Set the AI target
         AIController.SetTarget(currentWaypoint);
     }
@@ -77,5 +78,10 @@ public class WaypointController : MonoBehaviour
             //Set the AI Target
             AIController.SetTarget(currentWaypoint);
         }
+    }
+
+    public Transform GetCurrentWaypoint()
+    {
+        return currentWaypoint;
     }
 }
